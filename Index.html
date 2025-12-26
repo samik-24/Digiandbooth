@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digi Cam & Photo Booth</title>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #fff0f6;
+    margin: 0;
+    color: #4a0033;
+  }
+
+  header {
+    background: linear-gradient(to right, #ff4da6, #ff80bf);
+    color: white;
+    text-align: center;
+    padding: 35px 20px;
+  }
+
+  section {
+    padding: 30px 20px;
+    max-width: 1000px;
+    margin: auto;
+    text-align: center;
+  }
+
+  video, canvas {
+    width: 100%;
+    max-width: 420px;
+    border-radius: 10px;
+    margin: 15px 0;
+    box-shadow: 0 5px 15px rgba(255, 77, 166, 0.35);
+  }
+
+  button, select {
+    padding: 10px 15px;
+    margin: 6px;
+    font-size: 15px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  button {
+    background: #ff4da6;
+    color: white;
+  }
+
+  button:hover {
+    background: #e60073;
+  }
+
+  select {
+    background: #ffe6f2;
+    color: #800040;
+  }
+
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+  }
+
+  .photo-card {
+    position: relative;
+  }
+
+  .photo-card img {
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(255, 77, 166, 0.3);
+  }
+
+  .delete-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #ff1a75;
+    color: white;
+    border: none;
+    padding: 4px 6px;
+    font-size: 12px;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  footer {
+    background: #33001f;
+    color: #ffd6e8;
+    text-align: center;
+    padding: 15px;
+    margin-top: 40px;
+  }
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Digi Cam & Photo Booth</h1>
+  <p>Click • Filter • Save • Share Memories</p>
+</header>
+
+<section>
+  <h2>📸 Camera</h2>
+
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas" style="display:none;"></canvas>
+
+  <div>
+    <select id="filter">
+      <option value="none">Normal</option>
+      <option value="grayscale(100%)">Black & White</option>
+      <option value="sepia(100%)">Sepia</option>
+      <option value="blur(3px)">Blur</option>
+      <option value="brightness(120%)">Bright</option>
+      <option value="contrast(150%)">High Contrast</option>
+    </select>
+  </div>
+
+  <div>
+    <button onclick="takePhoto()">📷 Click</button>
+    <button onclick="savePhoto()">💾 Save</button>
+    <button onclick="retake()">🔄 Retake</button>
+  </div>
+</section>
+
+<section>
+  <h2>🖼️ Gallery</h2>
+  <div class="gallery" id="gallery"></div>
+</section>
+
+<footer>
+  © 2025 Digi Cam & Photo Booth | Developed by <strong>Samik Nepal</strong>
+</footer>
+
+<script>
+  const video = document.getElementById("video");
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  const filterSelect = document.getElementById("filter");
+  const gallery = document.getElementById("gallery");
+
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => video.srcObject = stream)
+    .catch(() => alert("Camera permission required"));
+
+  filterSelect.onchange = () => {
+    video.style.filter = filterSelect.value;
+  };
+
+  function takePhoto() {
+    canvas.style.display = "block";
+    video.style.display = "none";
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.filter = filterSelect.value;
+    ctx.drawImage(video, 0, 0);
+  }
+
+  function retake() {
+    canvas.style.display = "none";
+    video.style.display = "block";
+  }
+
+  function savePhoto() {
+    const data = canvas.toDataURL("image/png");
+    let photos = JSON.parse(localStorage.getItem("photos")) || [];
+    photos.push(data);
+    localStorage.setItem("photos", JSON.stringify(photos));
+    loadGallery();
+    alert("Photo saved!");
+  }
+
+  function loadGallery() {
+    gallery.innerHTML = "";
+    let photos = JSON.parse(localStorage.getItem("photos")) || [];
+    photos.forEach((img, index) => {
+      gallery.innerHTML += `
+        <div class="photo-card">
+          <img src="${img}">
+          <button class="delete-btn" onclick="deletePhoto(${index})">✕</button>
+        </div>`;
+    });
+  }
+
+  function deletePhoto(index) {
+    let photos = JSON.parse(localStorage.getItem("photos")) || [];
+    photos.splice(index, 1);
+    localStorage.setItem("photos", JSON.stringify(photos));
+    loadGallery();
+  }
+
+  loadGallery();
+</script>
+
+</body>
+</html>
